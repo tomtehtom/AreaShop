@@ -4,7 +4,7 @@
     <artifactId>areashop</artifactId>
     <packaging>jar</packaging>
     <name>AreaShop</name>
-    <version>2.6.0</version> <!-- Main plugin version -->
+    <version>2.6.3</version> <!-- Main plugin version -->
 
     <parent>
         <groupId>me.wiefferink</groupId>
@@ -16,10 +16,8 @@
         <!-- Bukkit, AreaShop aims to support 1.7.9+ -->
         <dependency>
             <groupId>org.bukkit</groupId>
-            <artifactId>craftbukkit</artifactId>
-            <version>1.13-R0.1-SNAPSHOT</version>
-            <type>jar</type>
-            <optional>true</optional>
+            <artifactId>bukkit</artifactId>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -43,14 +41,14 @@
             <artifactId>worldedit</artifactId>
             <scope>system</scope>
             <version>any</version>
-            <systemPath>${project.basedir}/../dependencies/worldedit-bukkit-7.0.0-beta-04.jar</systemPath>
+            <systemPath>${project.basedir}/../dependencies/worldedit-bukkit-7.2.0-beta-01.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.sk89q</groupId>
             <artifactId>worldguard</artifactId>
             <scope>system</scope>
             <version>any</version>
-            <systemPath>${project.basedir}/../dependencies/worldguard-legacy-7.0.0-beta-02.jar</systemPath>
+            <systemPath>${project.basedir}/../dependencies/worldguard-bukkit-7.0.4-beta1.jar</systemPath>
         </dependency>
 
         <!-- Interfaces that specific WorldGuard and WorldEdit versions are built against -->
@@ -114,6 +112,13 @@
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>me.wiefferink</groupId>
+            <artifactId>areashop-worldguard-7_0_4_beta1</artifactId>
+            <version>latest</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- WorldEdit implementations -->
         <dependency>
@@ -144,6 +149,13 @@
         </dependency>
         <dependency>
             <groupId>me.wiefferink</groupId>
+            <artifactId>areashop-worldedit-7_2_0_beta</artifactId>
+            <version>latest</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.wiefferink</groupId>
             <artifactId>areashop-fastasyncworldedit</artifactId>
             <version>latest</version>
             <type>jar</type>
@@ -163,7 +175,7 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>1.1</version>
+            <version>1.7</version>
         </dependency>
     </dependencies>
 
@@ -288,7 +300,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>2.4.3</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>

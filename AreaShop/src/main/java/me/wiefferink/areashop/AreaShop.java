@@ -13,8 +13,8 @@ import me.wiefferink.areashop.managers.FeatureManager;
 import me.wiefferink.areashop.managers.FileManager;
 import me.wiefferink.areashop.managers.Manager;
 import me.wiefferink.areashop.managers.SignLinkerManager;
-import me.wiefferink.areashop.tools.Analytics;
-import me.wiefferink.areashop.tools.GithubUpdateCheck;
+//import me.wiefferink.areashop.tools.Analytics;
+//import me.wiefferink.areashop.tools.GithubUpdateCheck;
 import me.wiefferink.areashop.tools.Utils;
 import me.wiefferink.bukkitdo.Do;
 import me.wiefferink.interactivemessenger.processing.Message;
@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,7 +66,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	private boolean debug = false;
 	private List<String> chatprefix = null;
 	private boolean ready = false;
-	private GithubUpdateCheck githubUpdateCheck = null;
+	// private GithubUpdateCheck githubUpdateCheck = null;
 
 	// Folders and file names
 	public static final String languageFolder = "lang";
@@ -160,26 +161,33 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			error("WorldEdit plugin is not present or has not loaded correctly");
 			error = true;
 		} else {
-			worldEdit = (WorldEditPlugin)plugin;
-			rawWeVersion = worldEdit.getDescription().getVersion();
-
-			// Find beta version
-			Pattern pattern = Pattern.compile("beta-?\\d+");
-			Matcher matcher = pattern.matcher(rawWeVersion);
-			if (matcher.find()) {
-				weBeta = matcher.group();
-			}
-
-			// Get correct WorldEditInterface (handles things that changed version to version)
-			if(worldEdit.getDescription().getVersion().startsWith("5.")) {
-				weVersion = "5";
-			} else if(worldEdit.getDescription().getVersion().startsWith("6.")) {
-				weVersion = "6";
-			} else if ("beta-01".equalsIgnoreCase(weBeta)) {
-				weVersion = "7_beta_1";
-			} else {
-				// beta-02 and beta-03 also have the new vector system already
-				weVersion = "7_beta_4";
+			try {
+				worldEdit = (WorldEditPlugin)plugin;
+				rawWeVersion = worldEdit.getDescription().getVersion();
+	
+				// Find beta version
+				Pattern pattern = Pattern.compile("beta-?\\d+");
+				Matcher matcher = pattern.matcher(rawWeVersion);
+				if (matcher.find()) {
+					weBeta = matcher.group();
+				}
+	
+				// Get correct WorldEditInterface (handles things that changed version to version)
+				if(worldEdit.getDescription().getVersion().startsWith("5.")) {
+					weVersion = "5";
+				} else if(worldEdit.getDescription().getVersion().startsWith("6.")) {
+					weVersion = "6";
+				} else if (worldEdit.getDescription().getVersion().startsWith("7.0.0") && "beta-01".equalsIgnoreCase(weBeta)) {
+					weVersion = "7_beta_1";
+				} else if (worldEdit.getDescription().getVersion().startsWith("7.0.0") && "beta-04".equalsIgnoreCase(weBeta)) {
+					// beta-02 and beta-03 also have the new vector system already
+					weVersion = "7_beta_4";
+				} else if (worldEdit.getDescription().getVersion().startsWith("7.2.0")) {
+					weVersion = "7_2_0_beta";
+				}
+			} catch (Exception e) { // If version detection fails, at least try to load the latest version
+				warn("Parsing the WorldEdit version failed, assuming version 7_2_0: ", rawWeVersion);
+				weVersion = "7_2_0_beta";
 			}
 
 			weVersion = "WorldEditHandler" + weVersion;
@@ -250,16 +258,18 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 					} else {
 						wgVersion = "6_1_3";
 					}
-				} else if ("beta-01".equalsIgnoreCase(weBeta)) {
+				} else if (worldGuard.getDescription().getVersion().startsWith("7.0.0") && "beta-01".equalsIgnoreCase(weBeta)) {
 					// When using WorldEdit beta-01, we need to use the WorldGuard variant with the old vector system
 					wgVersion = "7_beta_1";
-				} else {
+				} else if (worldGuard.getDescription().getVersion().startsWith("7.0.0") && "beta-02".equalsIgnoreCase(weBeta)) {
 					// Even though the WorldGuard file is called beta-02, the reported version is still beta-01!
 					wgVersion = "7_beta_2";
+				} else {
+					wgVersion = "7_0_4_beta1";
 				}
 			} catch(Exception e) { // If version detection fails, at least try to load the latest version
-				warn("Parsing the WorldGuard version failed, assuming version 7_beta_2:", rawWgVersion);
-				wgVersion = "7_beta_2";
+				warn("Parsing the WorldGuard version failed, assuming version 7_0_4_beta1: ", rawWgVersion);
+				wgVersion = "7_0_4_beta1";
 			}
 
 			wgVersion = "WorldGuardHandler" + wgVersion;
@@ -383,45 +393,45 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			managers.add(signLinkerManager);
 
 			// Enable Metrics if config allows it
-			if(getConfig().getBoolean("sendStats")) {
-				Analytics.start();
-			}
+			// if(getConfig().getBoolean("sendStats")) {
+			//	 Analytics.start();
+			// }
 
 			// Register dynamic permission (things declared in config)
 			registerDynamicPermissions();
 
 			// Don't initialize the updatechecker if disabled in the config
-			if(getConfig().getBoolean("checkForUpdates")) {
-				githubUpdateCheck = new GithubUpdateCheck(
-						AreaShop.getInstance(),
-						"NLThijs48",
-						"AreaShop"
-				).withVersionComparator((latestVersion, currentVersion) ->
-						!cleanVersion(latestVersion).equals(cleanVersion(currentVersion))
-				).checkUpdate(result -> {
-					AreaShop.debug("Update check result:", result);
-					if(!result.hasUpdate()) {
-						return;
-					}
-
-					AreaShop.info("Update from AreaShop V" + cleanVersion(result.getCurrentVersion()) + " to AreaShop V" + cleanVersion(result.getLatestVersion()) + " available, get the latest version at https://www.spigotmc.org/resources/areashop.2991/");
-					for(Player player : Utils.getOnlinePlayers()) {
-						notifyUpdate(player);
-					}
-				});
-			}
+			//			if(getConfig().getBoolean("checkForUpdates")) {
+			//				githubUpdateCheck = new GithubUpdateCheck(
+			//						AreaShop.getInstance(),
+			//						"NLThijs48",
+			//						"AreaShop"
+			//				).withVersionComparator((latestVersion, currentVersion) ->
+			//						!cleanVersion(latestVersion).equals(cleanVersion(currentVersion))
+			//				).checkUpdate(result -> {
+			//					AreaShop.debug("Update check result:", result);
+			//					if(!result.hasUpdate()) {
+			//						return;
+			//					}
+			//
+			//					AreaShop.info("Update from AreaShop V" + cleanVersion(result.getCurrentVersion()) + " to AreaShop V" + cleanVersion(result.getLatestVersion()) + " available, get the latest version at https://www.spigotmc.org/resources/areashop.2991/");
+			//					for(Player player : Utils.getOnlinePlayers()) {
+			//						notifyUpdate(player);
+			//					}
+			//				});
+			//			}
 		}
 	}
 
-	/**
-	 * Notify a player about an update if he wants notifications about it and an update is available.
-	 * @param sender CommandSender to notify
-	 */
-	public void notifyUpdate(CommandSender sender) {
-		if(githubUpdateCheck != null && githubUpdateCheck.hasUpdate() && sender.hasPermission("areashop.notifyupdate")) {
-			AreaShop.getInstance().message(sender, "update-playerNotify", cleanVersion(githubUpdateCheck.getCurrentVersion()), cleanVersion(githubUpdateCheck.getLatestVersion()));
-		}
-	}
+	//	/**
+	//	 * Notify a player about an update if he wants notifications about it and an update is available.
+	//	 * @param sender CommandSender to notify
+	//	 */
+	//	public void notifyUpdate(CommandSender sender) {
+	//		if(githubUpdateCheck != null && githubUpdateCheck.hasUpdate() && sender.hasPermission("areashop.notifyupdate")) {
+	//			AreaShop.getInstance().message(sender, "update-playerNotify", cleanVersion(githubUpdateCheck.getCurrentVersion()), cleanVersion(githubUpdateCheck.getLatestVersion()));
+	//		}
+	//	}
 
 	/**
 	 * Cleanup a version number.
